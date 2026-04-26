@@ -1,7 +1,4 @@
-def main() -> int:
-    from bot.__main__ import main as bot_main
-
-    return bot_main()
+from bot.__main__ import main
 
 
 if __name__ == "__main__":
