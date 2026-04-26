@@ -1,4 +1,4 @@
-from bot.formatters.transcription import format_transcription_result
+from bot.formatters.transcription import EMPTY_TRANSCRIPTION_MESSAGE, format_transcription_result
 
 
 def test_formats_plain_text_when_diarization_disabled():
@@ -27,6 +27,4 @@ def test_falls_back_to_text_when_utterances_are_empty():
 
 def test_returns_empty_result_message_when_service_has_no_text():
     payload = {"text": "", "utterances": []}
-    assert format_transcription_result(payload, diarization_enabled=False) == (
-        "Не удалось распознать речь в голосовом сообщении."
-    )
+    assert format_transcription_result(payload, diarization_enabled=False) == EMPTY_TRANSCRIPTION_MESSAGE
