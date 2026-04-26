@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, Boolean, DateTime, func
+from sqlalchemy import BigInteger, Boolean, DateTime, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bot.db.base import Base
@@ -14,6 +14,7 @@ class UserSettings(Base):
         Boolean,
         nullable=False,
         default=False,
+        server_default=false(),
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
