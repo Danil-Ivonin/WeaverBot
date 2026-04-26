@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,7 +34,10 @@ class UserSettingsRepository:
         stmt = stmt.values(**values)
         stmt = stmt.on_conflict_do_update(
             index_elements=[UserSettings.telegram_user_id],
-            set_={"diarization_enabled": enabled},
+            set_={
+                "diarization_enabled": enabled,
+                "updated_at": func.now(),
+            },
         )
         await self._session.execute(stmt)
         await self._session.commit()
