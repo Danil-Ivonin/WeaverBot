@@ -11,7 +11,12 @@ class SoundweaverError(Exception):
 class SoundweaverJobFailedError(SoundweaverError):
     def __init__(self, payload: dict):
         self.payload = payload
-        super().__init__(payload.get("error", {}).get("message", "Task failed"))
+        error_payload = payload.get("error")
+        if isinstance(error_payload, dict):
+            message = error_payload.get("message", "Task failed")
+        else:
+            message = "Task failed"
+        super().__init__(message)
 
 
 class SoundweaverTimeoutError(SoundweaverError):
