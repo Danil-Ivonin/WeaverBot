@@ -1,7 +1,5 @@
 def main() -> int:
-    from bot.__main__ import main as bot_main
-
-    return bot_main()
+    return 0
 
 
 if __name__ == "__main__":
