@@ -17,6 +17,14 @@ dependencies = [
   "greenlet>=3.1.0,<4.0.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "aiosqlite>=0.21.0,<0.22.0",
+  "pytest>=8.3.0,<9.0.0",
+  "pytest-asyncio>=0.26.0,<0.27.0",
+  "respx>=0.22.0,<0.23.0",
+]
+
 [dependency-groups]
 dev = [
   "aiosqlite>=0.21.0,<0.22.0",
@@ -30,6 +38,9 @@ default-groups = ["dev"]
 
 [tool.setuptools.packages.find]
 include = ["bot*"]
+
+[tool.setuptools]
+py-modules = ["main"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

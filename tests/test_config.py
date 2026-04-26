@@ -1,4 +1,5 @@
 from bot.config import Settings
+import main
 
 
 def test_settings_builds_from_values():
@@ -11,3 +12,7 @@ def test_settings_builds_from_values():
     assert settings.bot_token == "token"
     assert settings.soundweaver_poll_interval_sec == 2.0
     assert settings.soundweaver_poll_timeout_sec == 120.0
+
+
+def test_compatibility_entrypoint_returns_zero():
+    assert main.main() == 0
