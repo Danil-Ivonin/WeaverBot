@@ -2,6 +2,7 @@ import importlib
 import sys
 
 import pytest
+from sqlalchemy import func, select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -60,6 +61,7 @@ async def test_upsert_updates_existing_setting():
 @pytest.mark.asyncio
 async def test_first_write_false_uses_default_disabled_value():
     from bot.db import Base
+    from bot.db.models import UserSettings
     from bot.repositories.user_settings import UserSettingsRepository
 
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
@@ -75,6 +77,12 @@ async def test_first_write_false_uses_default_disabled_value():
     async with session_factory() as session:
         repo = UserSettingsRepository(session)
         await repo.set_diarization_enabled(1002, False)
+        count = await session.scalar(
+            select(func.count()).select_from(UserSettings).where(
+                UserSettings.telegram_user_id == 1002
+            )
+        )
+        assert count == 1
         assert await repo.get_diarization_enabled(1002) is False
 
 
