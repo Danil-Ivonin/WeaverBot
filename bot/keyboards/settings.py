@@ -1,5 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+SETTINGS_TOGGLE_CALLBACK = "settings:toggle_diarization"
+
 
 def build_settings_keyboard(enabled: bool) -> InlineKeyboardMarkup:
     label = (
@@ -12,7 +14,7 @@ def build_settings_keyboard(enabled: bool) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text=label,
-                    callback_data="settings:toggle_diarization",
+                    callback_data=SETTINGS_TOGGLE_CALLBACK,
                 )
             ]
         ]

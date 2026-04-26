@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from bot.keyboards.settings import build_settings_keyboard
+from bot.keyboards.settings import SETTINGS_TOGGLE_CALLBACK, build_settings_keyboard
 from bot.repositories.user_settings import UserSettingsRepository
 
 router = Router()
@@ -12,11 +12,6 @@ router = Router()
 def render_settings_text(enabled: bool) -> str:
     status = "включена" if enabled else "выключена"
     return f"Разбивка по спикерам: {status}"
-
-
-def toggle_diarization_value(enabled: bool) -> bool:
-    return not enabled
-
 
 @router.message(Command("settings"))
 async def settings_command(
@@ -33,16 +28,14 @@ async def settings_command(
     )
 
 
-@router.callback_query(F.data == "settings:toggle_diarization")
+@router.callback_query(F.data == SETTINGS_TOGGLE_CALLBACK)
 async def toggle_settings(
     callback: CallbackQuery,
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     async with session_factory() as session:
         repo = UserSettingsRepository(session)
-        enabled = await repo.get_diarization_enabled(callback.from_user.id)
-        new_value = toggle_diarization_value(enabled)
-        await repo.set_diarization_enabled(callback.from_user.id, new_value)
+        new_value = await repo.toggle_diarization_enabled(callback.from_user.id)
 
     await callback.message.edit_text(
         render_settings_text(new_value),

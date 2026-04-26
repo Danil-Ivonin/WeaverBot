@@ -59,6 +59,32 @@ async def test_upsert_updates_existing_setting():
 
 
 @pytest.mark.asyncio
+async def test_toggle_diarization_enabled_flips_stored_value():
+    from bot.db import Base
+    from bot.repositories.user_settings import UserSettingsRepository
+
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session_factory = async_sessionmaker(
+        engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
+
+    async with session_factory() as session:
+        repo = UserSettingsRepository(session)
+
+        first_value = await repo.toggle_diarization_enabled(1004)
+        second_value = await repo.toggle_diarization_enabled(1004)
+
+        assert first_value is True
+        assert second_value is False
+        assert await repo.get_diarization_enabled(1004) is False
+
+
+@pytest.mark.asyncio
 async def test_first_write_false_uses_default_disabled_value():
     from bot.db import Base
     from bot.db.models import UserSettings
