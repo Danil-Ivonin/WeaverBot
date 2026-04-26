@@ -13,7 +13,11 @@ class SoundweaverJobFailedError(SoundweaverError):
         self.payload = payload
         error_payload = payload.get("error")
         if isinstance(error_payload, dict):
-            message = error_payload.get("message", "Task failed")
+            raw_message = error_payload.get("message")
+            if isinstance(raw_message, str) and raw_message:
+                message = raw_message
+            else:
+                message = "Task failed"
         else:
             message = "Task failed"
         super().__init__(message)
