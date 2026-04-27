@@ -75,8 +75,8 @@ async def handle_voice(
     except SoundweaverTimeoutError:
         await message.answer(build_user_error_message("timeout"))
         return
-    except SoundweaverJobFailedError:
-        await message.answer(build_user_error_message("failed"))
+    except SoundweaverJobFailedError as err:
+        await message.answer(build_user_error_message("failed") + str(err))
         return
     except httpx.HTTPStatusError as exc:
         logger.exception(
