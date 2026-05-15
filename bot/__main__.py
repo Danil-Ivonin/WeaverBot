@@ -11,6 +11,10 @@ from bot.handlers.voice import router as voice_router
 from bot.services.soundweaver import SoundweaverClient
 
 
+def build_http_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(timeout=30.0, trust_env=False)
+
+
 def main() -> int:
     asyncio.run(run())
     return 0
@@ -25,7 +29,7 @@ async def run() -> None:
     dispatcher.include_router(settings_router)
     dispatcher.include_router(voice_router)
 
-    http_client = httpx.AsyncClient(timeout=30.0)
+    http_client = build_http_client()
     session_factory = create_session_factory(settings.database_url)
     soundweaver_client = SoundweaverClient(
         http_client,

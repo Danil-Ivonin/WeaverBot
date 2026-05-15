@@ -6,7 +6,10 @@ from aiogram import Bot, Router
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from bot.formatters.transcription import format_transcription_result
+from bot.formatters.transcription import (
+    format_transcription_result,
+    split_telegram_message,
+)
 from bot.repositories.user_settings import UserSettingsRepository
 from bot.services.soundweaver import (
     SoundweaverClient,
@@ -16,8 +19,11 @@ from bot.services.soundweaver import (
 
 router = Router()
 logger = logging.getLogger(__name__)
+MAX_LOGGED_RESPONSE_BODY_CHARS = 2000
 
-DOWNLOAD_ERROR = "Не удалось получить голосовое сообщение. Попробуйте отправить его ещё раз."
+DOWNLOAD_ERROR = (
+    "Не удалось получить голосовое сообщение. Попробуйте отправить его ещё раз."
+)
 UPLOAD_ERROR = "Не удалось передать аудио в сервис распознавания. Попробуйте позже."
 TRANSCRIPTION_START_ERROR = "Не удалось запустить распознавание. Попробуйте позже."
 TIMEOUT_ERROR = "Сервис распознавания не завершил обработку вовремя. Попробуйте позже."
@@ -37,6 +43,21 @@ def build_user_error_message(error_type: str) -> str:
         "failed": FAILED_TRANSCRIPTION_ERROR,
     }
     return mapping[error_type]
+
+
+def format_http_error_for_log(exc: httpx.HTTPStatusError) -> str:
+    response = exc.response
+    body = response.text
+    if len(body) > MAX_LOGGED_RESPONSE_BODY_CHARS:
+        body = f"{body[:MAX_LOGGED_RESPONSE_BODY_CHARS]}..."
+
+    return (
+        f"method={exc.request.method} "
+        f"url={exc.request.url} "
+        f"status_code={response.status_code} "
+        f"content_type={response.headers.get('content-type', '<missing>')} "
+        f"response_body={body!r}"
+    )
 
 
 @router.message(lambda message: bool(message.voice))
@@ -79,17 +100,19 @@ async def handle_voice(
         await message.answer(build_user_error_message("failed") + str(err))
         return
     except httpx.HTTPStatusError as exc:
-        logger.exception(
-            "Soundweaver HTTP error",
-            extra={"status_code": exc.response.status_code},
-        )
+        logger.exception("Soundweaver HTTP error: %s", format_http_error_for_log(exc))
         status_code = exc.response.status_code
         if exc.request.url.path == "/v1/uploads" or exc.request.method == "PUT":
             await message.answer(build_user_error_message("upload"))
-        elif status_code in {404, 409, 422} or exc.request.url.path == "/v1/transcriptions":
+        elif (
+            status_code in {404, 409, 422}
+            or exc.request.url.path == "/v1/transcriptions"
+        ):
             await message.answer(build_user_error_message("transcription"))
         else:
             await message.answer(build_user_error_message("failed"))
         return
 
-    await message.answer(format_transcription_result(payload, diarization_enabled))
+    result_text = format_transcription_result(payload, diarization_enabled)
+    for chunk in split_telegram_message(result_text):
+        await message.answer(chunk)
